@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import pickle
 import io
-import chardet
 from PIL import Image
 
 # -------------------- การตั้งค่าหน้าเว็บ --------------------
