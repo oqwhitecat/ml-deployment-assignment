@@ -85,7 +85,7 @@ def preprocess_input(df):
     df['Education'] = le_edu.transform(df['Education'].astype(str))
     df['Marital_Status'] = le_mar.transform(df['Marital_Status'].astype(str))
     
-    return df[required_features]
+    return df[required_features]   # <-- บรรทัดนี้ต้องเยื้องตรงกับฟังก์ชัน
 
 # -------------------- ส่วนหัวของแอป --------------------
 st.title("🎯 Marketing Campaign Response Prediction")
