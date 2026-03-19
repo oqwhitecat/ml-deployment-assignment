@@ -44,7 +44,6 @@ def detect_separator(file_bytes):
 def preprocess_input(df):
     df = df.copy()
     
-    # กำหนดค่าเริ่มต้นสำหรับฟีเจอร์ที่อาจหายไป
     if 'Teenhome' not in df.columns:
         df['Teenhome'] = 0
     if 'Recency' not in df.columns:
@@ -78,7 +77,7 @@ def preprocess_input(df):
     df['Education'] = le_edu.transform(df['Education'].astype(str))
     df['Marital_Status'] = le_mar.transform(df['Marital_Status'].astype(str))
     
-    return df[required_features]   # <--- บรรทัดนี้เยื้องถูกต้องแล้ว
+    return df[required_features]   # <--- บรรทัดนี้เยื้องตรงกับฟังก์ชันแล้ว
 
 # -------------------- ส่วนหัวของแอป --------------------
 st.title("🎯 Marketing Campaign Response Prediction")
@@ -92,7 +91,6 @@ st.markdown("""
 # -------------------- Tabs --------------------
 tab1, tab2, tab3 = st.tabs(["🔍 ทดสอบรายบุคคล", "📁 อัปโหลด CSV", "📊 ดูข้อมูลโมเดล"])
 
-# ==================== แท็บ 1 ====================
 with tab1:
     st.subheader("🔍 กรอกข้อมูลลูกค้าเพื่อทำนาย")
     
@@ -157,7 +155,6 @@ with tab1:
                 else:
                     st.info("📚 ลูกค้ายังไม่พร้อมตอบรับ แนะนำให้ส่งเนื้อหาสร้างการรับรู้ก่อน")
 
-# ==================== แท็บ 2 ====================
 with tab2:
     st.subheader("📁 อัปโหลดไฟล์ CSV เพื่อทำนายทีละหลายรายการ")
     
@@ -222,7 +219,6 @@ with tab2:
             st.error(f"❌ เกิดข้อผิดพลาด: {e}")
             st.info("กรุณาตรวจสอบรูปแบบไฟล์หรือลองใช้ไฟล์ตัวอย่าง")
 
-# ==================== แท็บ 3 ====================
 with tab3:
     st.subheader("📊 ข้อมูลเกี่ยวกับโมเดล")
     
@@ -262,7 +258,6 @@ with tab3:
         st.bar_chart(df_importance.set_index('Feature'))
         st.dataframe(df_importance)
 
-# -------------------- Sidebar --------------------
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/000000/machine-learning.png", width=80)
     st.markdown("## เกี่ยวกับระบบ")
