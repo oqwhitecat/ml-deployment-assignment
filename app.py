@@ -60,8 +60,8 @@ def preprocess_input(df):
     known_mar = set(le_mar.classes_)
     df['Marital_Status'] = df['Marital_Status'].apply(lambda x: x if x in known_mar else 'Unknown')
     
-    # Transform
-    df['Education'] = le_edu.transform(df['Education'])
-    df['Marital_Status'] = le_mar.transform(df['Marital_Status'])
+   # จัดการ Missing Values
+df[num_features] = num_imputer.transform(df[num_features])
+df[cat_features] = cat_imputer.transform(df[cat_features])
     
     return df[required_features]
