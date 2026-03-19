@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import pickle
-import os
+import io
+import chardet
 from PIL import Image
 
 # -------------------- การตั้งค่าหน้าเว็บ --------------------
@@ -11,6 +12,18 @@ st.set_page_config(
     page_icon="📊",
     layout="wide"
 )
+
+# -------------------- ฟังก์ชันตรวจจับตัวคั่นในไฟล์ CSV --------------------
+def detect_separator(file_bytes):
+    """ตรวจจับว่าไฟล์ใช้คอมม่า (,) หรือแท็บ (\\t) เป็นตัวคั่น"""
+    try:
+        sample = file_bytes.decode('utf-8').split('\n')[0]
+        if '\t' in sample:
+            return '\t'
+        else:
+            return ','
+    except:
+        return ','  # default เป็นคอมม่า
 
 # -------------------- โหลดโมเดลและ preprocessing tools --------------------
 @st.cache_resource
@@ -57,6 +70,7 @@ def preprocess_input(df):
     for col in required_features:
         if col not in df.columns:
             st.error(f"❌ ข้อมูลขาดคอลัมน์: {col}")
+            st.info(f"คอลัมน์ที่มีในไฟล์: {list(df.columns)}")
             return None
     
     # แยกประเภทฟีเจอร์
@@ -115,7 +129,6 @@ with tab1:
         total_promo = st.number_input("จำนวนแคมเปญที่เคยตอบรับ", min_value=0, max_value=10, value=1, step=1)
     
     if st.button("🚀 เริ่มทำนาย", use_container_width=True):
-        # สร้าง DataFrame จากข้อมูลที่กรอก
         input_data = pd.DataFrame({
             'Education': [education],
             'Marital_Status': [marital],
@@ -128,15 +141,12 @@ with tab1:
             'Total_Promo': [total_promo]
         })
         
-        # Preprocess
         processed_data = preprocess_input(input_data)
         
         if processed_data is not None:
-            # ทำนาย
             prediction = model.predict(processed_data)[0]
             probability = model.predict_proba(processed_data)[0]
             
-            # แสดงผล
             st.markdown("---")
             col_res1, col_res2 = st.columns(2)
             
@@ -163,15 +173,24 @@ with tab2:
         **รูปแบบไฟล์ที่ต้องการ:**
         - ต้องมีคอลัมน์ตามนี้: `Education`, `Marital_Status`, `Teenhome`, `Recency`,
           `NumCatalogPurchases`, `NumStorePurchases`, `NumWebVisitsMonth`, `Age`, `Total_Promo`
-        - ไฟล์ต้องเป็น CSV และใช้คอมม่า (`,`) เป็นตัวคั่น
+        - ไฟล์可以是 CSV (ใช้คอมม่า `,` หรือแท็บ `\\t` เป็นตัวคั่นก็ได้)
+        
+        **📥 ดาวน์โหลดไฟล์ตัวอย่าง:**  
+        [customer_sample.csv](./customer_sample.csv) (คลิกขวา > Save link as...)
     """)
     
-    uploaded_file = st.file_uploader("เลือกไฟล์ CSV", type=['csv'])
+    uploaded_file = st.file_uploader("เลือกไฟล์ CSV", type=['csv', 'txt'])
     
     if uploaded_file is not None:
         try:
-            df_input = pd.read_csv(uploaded_file)
-            st.success(f"✅ อัปโหลดสำเร็จ! พบ {len(df_input)} แถว")
+            # อ่านเนื้อหาไฟล์เป็น bytes เพื่อตรวจสอบตัวคั่น
+            file_bytes = uploaded_file.getvalue()
+            sep = detect_separator(file_bytes)
+            
+            # อ่าน CSV ด้วยตัวคั่นที่ตรวจพบ
+            df_input = pd.read_csv(io.BytesIO(file_bytes), sep=sep)
+            
+            st.success(f"✅ อัปโหลดสำเร็จ! พบ {len(df_input)} แถว (ใช้ตัวคั่น: '{sep}')")
             
             # แสดงตัวอย่างข้อมูล
             with st.expander("🔍 ดูตัวอย่างข้อมูล"):
@@ -179,15 +198,12 @@ with tab2:
             
             if st.button("🚀 ทำนายทั้งหมด", use_container_width=True):
                 with st.spinner("กำลังประมวลผล..."):
-                    # Preprocess ทีละ batch
                     processed_data = preprocess_input(df_input)
                     
                     if processed_data is not None:
-                        # ทำนาย
                         predictions = model.predict(processed_data)
                         probabilities = model.predict_proba(processed_data)
                         
-                        # เพิ่มผลลัพธ์ลงใน DataFrame
                         df_result = df_input.copy()
                         df_result['Prediction'] = predictions
                         df_result['Prediction_Label'] = df_result['Prediction'].map({0: 'ไม่ตอบรับ', 1: 'ตอบรับ'})
@@ -196,7 +212,6 @@ with tab2:
                         
                         st.success("✅ ทำนายเสร็จสิ้น!")
                         
-                        # แสดงสรุป
                         col1, col2, col3 = st.columns(3)
                         with col1:
                             st.metric("จำนวนทั้งหมด", len(df_result))
@@ -205,11 +220,9 @@ with tab2:
                         with col3:
                             st.metric("ไม่ตอบรับ", (df_result['Prediction'] == 0).sum())
                         
-                        # แสดงตารางผลลัพธ์
                         st.subheader("📊 ผลลัพธ์การทำนาย")
                         st.dataframe(df_result)
                         
-                        # ให้ดาวน์โหลด
                         csv = df_result.to_csv(index=False).encode('utf-8')
                         st.download_button(
                             label="📥 ดาวน์โหลดผลลัพธ์ (CSV)",
@@ -219,6 +232,7 @@ with tab2:
                         )
         except Exception as e:
             st.error(f"❌ เกิดข้อผิดพลาด: {e}")
+            st.info("กรุณาตรวจสอบรูปแบบไฟล์หรือลองใช้ไฟล์ตัวอย่าง")
 
 # ==================== แท็บ 3: ดูข้อมูลโมเดล ====================
 with tab3:
@@ -243,7 +257,6 @@ with tab3:
         9. Total_Promo (จำนวนแคมเปญที่เคยตอบรับ)
     """)
     
-    # แสดง Feature Importance (ถ้าโมเดลมี)
     if hasattr(model, 'feature_importances_'):
         st.subheader("🔍 ความสำคัญของฟีเจอร์ (Feature Importance)")
         
