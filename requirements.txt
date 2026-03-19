@@ -1,6 +1,5 @@
-streamlit==1.28.0
-pandas==2.2.0
-numpy==1.26.0
-scikit-learn==1.6.1   # match the version used to save the pickle files
-pillow==10.1.0
-chardet==5.2.0
+streamlit
+pandas
+scikit-learn
+numpy
+imbalanced-learn  # ถ้าต้องการ แต่ถ้าแค่โหลดโมเดลอาจไม่ต้อง
