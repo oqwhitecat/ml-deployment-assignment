@@ -1,5 +1,7 @@
-streamlit
-pandas
-scikit-learn
-numpy
-imbalanced-learn  # ถ้าต้องการ แต่ถ้าแค่โหลดโมเดลอาจไม่ต้อง
+streamlit>=1.28.0
+pandas>=2.2.0
+scikit-learn==1.6.1      # ใช้รุ่นเดียวกับตอนเทรน
+numpy>=1.26.0             # รุ่นที่รองรับ Python 3.13
+pillow>=10.4.0            # รุ่นที่รองรับ Python 3.13
+chardet>=5.2.0            # เพิ่มเข้ามา
+imbalanced-learn>=0.12.0  # ถ้าจำเป็น
