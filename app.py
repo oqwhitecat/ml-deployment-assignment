@@ -78,7 +78,7 @@ def preprocess_input(df):
     df['Education'] = le_edu.transform(df['Education'].astype(str))
     df['Marital_Status'] = le_mar.transform(df['Marital_Status'].astype(str))
     
-    return df[required_features]   # <--- บรรทัดนี้ต้องเยื้องตรงกับฟังก์ชัน (ใช้ 4 spaces)
+    return df[required_features]   # <--- บรรทัดนี้เยื้องถูกต้องแล้ว
 
 # -------------------- ส่วนหัวของแอป --------------------
 st.title("🎯 Marketing Campaign Response Prediction")
