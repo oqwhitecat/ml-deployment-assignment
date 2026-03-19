@@ -15,7 +15,6 @@ st.set_page_config(
 # -------------------- โหลดโมเดลและ preprocessing tools --------------------
 @st.cache_resource
 def load_assets():
-    """โหลดโมเดลและตัวแปลงต่าง ๆ จากไฟล์ .pkl"""
     try:
         model = pickle.load(open('model_deployment.pkl', 'rb'))
         le_edu = pickle.load(open('encoder_education.pkl', 'rb'))
@@ -32,7 +31,6 @@ model, le_edu, le_mar, num_imputer, cat_imputer = load_assets()
 
 # -------------------- ฟังก์ชันตรวจจับตัวคั่นในไฟล์ CSV --------------------
 def detect_separator(file_bytes):
-    """ตรวจจับว่าไฟล์ใช้คอมม่า (,) หรือแท็บ (\\t) เป็นตัวคั่น"""
     try:
         sample = file_bytes.decode('utf-8').split('\n')[0]
         if '\t' in sample:
@@ -42,9 +40,8 @@ def detect_separator(file_bytes):
     except:
         return ','
 
-# -------------------- ฟังก์ชันสำหรับ preprocessing ข้อมูลใหม่ --------------------
+# -------------------- ฟังก์ชัน preprocessing --------------------
 def preprocess_input(df):
-    """Preprocess ข้อมูลที่รับเข้ามาให้ตรงกับตอนเทรนโมเดล"""
     df = df.copy()
     
     # กำหนดค่าเริ่มต้นสำหรับฟีเจอร์ที่อาจหายไป
@@ -61,7 +58,6 @@ def preprocess_input(df):
     if 'Total_Promo' not in df.columns:
         df['Total_Promo'] = 0
     
-    # ตรวจสอบฟีเจอร์ที่ต้องมีทั้งหมด
     required_features = ['Education', 'Marital_Status', 'Teenhome', 'Recency',
                          'NumCatalogPurchases', 'NumStorePurchases', 'NumWebVisitsMonth',
                          'Age', 'Total_Promo']
@@ -72,20 +68,17 @@ def preprocess_input(df):
             st.info(f"คอลัมน์ที่มีในไฟล์: {list(df.columns)}")
             return None
     
-    # แยกประเภทฟีเจอร์
     num_features = ['Recency', 'NumCatalogPurchases', 'NumStorePurchases',
                     'NumWebVisitsMonth', 'Age', 'Total_Promo', 'Teenhome']
     cat_features = ['Education', 'Marital_Status']
     
-    # จัดการ Missing Values (ใช้ imputer ที่บันทึกไว้)
     df[num_features] = num_imputer.transform(df[num_features])
     df[cat_features] = cat_imputer.transform(df[cat_features])
     
-    # Encode ข้อความ
     df['Education'] = le_edu.transform(df['Education'].astype(str))
     df['Marital_Status'] = le_mar.transform(df['Marital_Status'].astype(str))
     
-    return df[required_features]   # <-- ตรวจสอบให้แน่ใจว่าบรรทัดนี้เยื้องตรงกับฟังก์ชัน
+    return df[required_features]   # <--- บรรทัดนี้ต้องเยื้องตรงกับฟังก์ชัน (ใช้ 4 spaces)
 
 # -------------------- ส่วนหัวของแอป --------------------
 st.title("🎯 Marketing Campaign Response Prediction")
@@ -96,10 +89,10 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# -------------------- สร้าง Tabs --------------------
+# -------------------- Tabs --------------------
 tab1, tab2, tab3 = st.tabs(["🔍 ทดสอบรายบุคคล", "📁 อัปโหลด CSV", "📊 ดูข้อมูลโมเดล"])
 
-# ==================== แท็บ 1: ทดสอบรายบุคคล ====================
+# ==================== แท็บ 1 ====================
 with tab1:
     st.subheader("🔍 กรอกข้อมูลลูกค้าเพื่อทำนาย")
     
@@ -164,7 +157,7 @@ with tab1:
                 else:
                     st.info("📚 ลูกค้ายังไม่พร้อมตอบรับ แนะนำให้ส่งเนื้อหาสร้างการรับรู้ก่อน")
 
-# ==================== แท็บ 2: อัปโหลด CSV ====================
+# ==================== แท็บ 2 ====================
 with tab2:
     st.subheader("📁 อัปโหลดไฟล์ CSV เพื่อทำนายทีละหลายรายการ")
     
@@ -182,16 +175,12 @@ with tab2:
     
     if uploaded_file is not None:
         try:
-            # อ่านเนื้อหาไฟล์เป็น bytes เพื่อตรวจสอบตัวคั่น
             file_bytes = uploaded_file.getvalue()
             sep = detect_separator(file_bytes)
-            
-            # อ่าน CSV ด้วยตัวคั่นที่ตรวจพบ
             df_input = pd.read_csv(io.BytesIO(file_bytes), sep=sep)
             
             st.success(f"✅ อัปโหลดสำเร็จ! พบ {len(df_input)} แถว (ใช้ตัวคั่น: '{sep}')")
             
-            # แสดงตัวอย่างข้อมูล
             with st.expander("🔍 ดูตัวอย่างข้อมูล"):
                 st.dataframe(df_input.head())
             
@@ -233,7 +222,7 @@ with tab2:
             st.error(f"❌ เกิดข้อผิดพลาด: {e}")
             st.info("กรุณาตรวจสอบรูปแบบไฟล์หรือลองใช้ไฟล์ตัวอย่าง")
 
-# ==================== แท็บ 3: ดูข้อมูลโมเดล ====================
+# ==================== แท็บ 3 ====================
 with tab3:
     st.subheader("📊 ข้อมูลเกี่ยวกับโมเดล")
     
