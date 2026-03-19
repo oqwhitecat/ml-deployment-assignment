@@ -44,6 +44,7 @@ def detect_separator(file_bytes):
 def preprocess_input(df):
     df = df.copy()
     
+    # เพิ่มคอลัมน์ที่จำเป็นหากไม่มี (กรณีข้อมูลรายบุคคลที่อาจกรอกไม่ครบ)
     if 'Teenhome' not in df.columns:
         df['Teenhome'] = 0
     if 'Recency' not in df.columns:
@@ -71,13 +72,20 @@ def preprocess_input(df):
                     'NumWebVisitsMonth', 'Age', 'Total_Promo', 'Teenhome']
     cat_features = ['Education', 'Marital_Status']
     
-    df[num_features] = num_imputer.transform(df[num_features])
-    df[cat_features] = cat_imputer.transform(df[cat_features])
+    # ใช้ imputer ที่โหลดมา (ถ้าเกิดปัญหา version mismatch จะได้แสดงข้อความ)
+    try:
+        df[num_features] = num_imputer.transform(df[num_features])
+        df[cat_features] = cat_imputer.transform(df[cat_features])
+    except AttributeError as e:
+        st.error("เกิดข้อผิดพลาดในการแปลงข้อมูล: scikit-learn version ไม่ตรงกับที่ใช้เทรนโมเดล")
+        st.info("กรุณาตรวจสอบว่าได้ติดตั้ง scikit-learn เวอร์ชัน 1.6.1 (รุ่นเดียวกับที่ใช้สร้างไฟล์ .pkl)")
+        st.stop()
     
+    # Encode ข้อความ
     df['Education'] = le_edu.transform(df['Education'].astype(str))
     df['Marital_Status'] = le_mar.transform(df['Marital_Status'].astype(str))
     
-    return df[required_features]   # <--- บรรทัดนี้เยื้องตรงกับฟังก์ชันแล้ว
+    return df[required_features]   # <--- ตรวจสอบให้แน่ใจว่าเยื้องตรงกับฟังก์ชัน (4 spaces)
 
 # -------------------- ส่วนหัวของแอป --------------------
 st.title("🎯 Marketing Campaign Response Prediction")
